@@ -1,0 +1,19 @@
+{
+  "_comment": "Prices are $ per 1M tokens. Edit here, no deploy needed — the proxy hot-reloads on file change. cheaper_alternative powers substitution suggestions.",
+  "openai": {
+    "gpt-4o": {"input_per_1m": 2.50, "output_per_1m": 10.00, "cheaper_alternative": "gpt-4o-mini"},
+    "gpt-4o-mini": {"input_per_1m": 0.15, "output_per_1m": 0.60},
+    "gpt-4.1": {"input_per_1m": 2.00, "output_per_1m": 8.00, "cheaper_alternative": "gpt-4.1-mini"},
+    "gpt-4.1-mini": {"input_per_1m": 0.40, "output_per_1m": 1.60, "cheaper_alternative": "gpt-4.1-nano"},
+    "gpt-4.1-nano": {"input_per_1m": 0.10, "output_per_1m": 0.40}
+  },
+  "anthropic": {
+    "claude-opus-4-8": {"input_per_1m": 15.00, "output_per_1m": 75.00, "cheaper_alternative": "claude-sonnet-5"},
+    "claude-sonnet-5": {"input_per_1m": 3.00, "output_per_1m": 15.00, "cheaper_alternative": "claude-haiku-4-5"},
+    "claude-haiku-4-5": {"input_per_1m": 1.00, "output_per_1m": 5.00}
+  },
+  "mock": {
+    "mock-large": {"input_per_1m": 10.00, "output_per_1m": 30.00, "cheaper_alternative": "mock-small"},
+    "mock-small": {"input_per_1m": 0.20, "output_per_1m": 0.80}
+  }
+}
