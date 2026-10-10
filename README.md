@@ -1,3 +1,14 @@
+> **Status: archived (October 2026). Experiment, not production-ready.**
+>
+> **What works:** a drop-in OpenAI/Anthropic-compatible proxy. On real traffic (tested through Ollama), its token counts matched provider-reported usage on both APIs, with and without streaming. Teams are kept separate and prompts are redacted by default.
+>
+> **Known limits:**
+> - When the provider doesn't report usage, counts come from a single local tokenizer and are estimates.
+> - Anthropic cache-read and cache-write tokens aren't priced.
+> - Upstream errors on streaming requests come back as HTTP 200 with an empty stream.
+> - The semantic cache ignores non-ASCII text, so keep `CACHE_MODE=detect` (the default).
+> - The model-comparison judge has no answer-order swap and no minimum sample size.
+
 # 💸 Build 2 — LLM Cost Forensics
 
 **FinOps for LLM spend.** A drop-in API proxy that turns one opaque LLM invoice into
@@ -86,8 +97,9 @@ path (a slow rollup can never slow a live call).
    and `X-Feature`, `X-Prompt-Version` headers.
 2. Key → team (401 if unknown). Fingerprint = hash(team, provider, model, prompt).
 3. Waste detector checks the fingerprint window → `retry` / `duplicate` flags.
-4. Semantic cache lookup (per-team scope). Hit + `temperature ≤ 0.3` → serve cached
-   response, log a $0 row with `saved_usd`, done in ~1 ms.
+4. Semantic cache lookup (per-team scope). Default `CACHE_MODE=detect`: a hit only
+   flags the call as `duplicate` / `semantic_dup` waste. With opt-in `CACHE_MODE=serve`,
+   hit + `temperature ≤ 0.3` → serve cached response, log a $0 row with `saved_usd`.
 5. Otherwise forward to the provider (server-side key). Streaming: chunks are yielded
    to the client as they arrive and accumulated in parallel.
 6. After the response/stream completes: usage extracted (or tokenized), cost computed
@@ -112,7 +124,7 @@ app/
   dashboard.py  single-file Chart.js dashboard
 config/rate_card.json   versioned pricing (edit → hot reload)
 scripts/                mint_key · mock_provider · simulate · judge_run
-tests/                  28 tests incl. fail-open chaos + labeled cache set
+tests/                  30 tests incl. fail-open chaos + labeled cache set
 ```
 
 ## Quickstart
@@ -126,14 +138,8 @@ OPENAI_BASE_URL=http://localhost:9100 ANTHROPIC_BASE_URL=http://localhost:9100 \
   uvicorn app.main:app --port 8080 &
 python scripts/simulate.py                                # traffic + admin key
 open http://localhost:8080/dashboard                      # paste the admin key
-pytest tests/ -q                                          # 28 passing
+pytest tests/ -q                                          # 30 passing
 ```
-
-## The interview one-liner (memorize)
-
-> "The proxy **fails open** — if my cost-logging infrastructure goes down, the user's
-> actual LLM call still succeeds. Observability should never be allowed to break the
-> product it's observing."
 
 ## Deliberate simplifications (and when to upgrade)
 

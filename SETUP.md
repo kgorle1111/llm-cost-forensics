@@ -40,7 +40,8 @@ python scripts/simulate.py
 `simulate.py` prints an **admin key** (`cf_...`). Open
 <http://localhost:8080/dashboard>, paste it top-right, click **Load**. You should
 see: spend by feature, waste by cause (retries in `checkout-summarizer`), cache
-savings, and a suggestion to swap `claude-opus-4-8 → claude-sonnet-5` on
+savings (only with `CACHE_MODE=serve` on T2; the default `detect` flags duplicates
+but serves nothing, so "Cache saved" stays $0), and a suggestion to swap `claude-opus-4-8 → claude-sonnet-5` on
 `review-sentiment`.
 
 ## 3. Real mode — API keys
@@ -110,7 +111,7 @@ on the suggestion row in the dashboard.
 ## 7. Tests
 
 ```bash
-pytest tests/ -q        # 28 tests, no network, no paid API calls
+pytest tests/ -q        # 30 tests, no network, no paid API calls
 ```
 
 Covers: hand-computed cost values, rate-card hot reload, byte-identical
@@ -135,5 +136,5 @@ cross-team cache isolation, and the fail-open chaos tests.
 | `401 missing or malformed proxy key` | Caller must send `Authorization: Bearer cf_...` (a minted team key, not a provider key) |
 | Dashboard empty | Paste a valid key top-right; team keys only see their own team's rows |
 | `unpriced_calls > 0` in summary | The model isn't in `config/rate_card.json` — add it |
-| Cache never hits | Serving requires `temperature ≤ 0.3`; higher temps are flagged as waste but not served |
+| Cache never hits | Default `CACHE_MODE=detect` only flags duplicates. Set `CACHE_MODE=serve` to serve them; serving also requires `temperature ≤ 0.3` |
 | Judge: "no stored prompts" | Set `PROMPT_LOGGING=full`, restart, send traffic first |
