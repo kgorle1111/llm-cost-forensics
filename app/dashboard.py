@@ -69,20 +69,22 @@ async function api(path){
 }
 function chart(id, cfg){ if(charts[id]) charts[id].destroy(); charts[id] = new Chart($(id), cfg); }
 function money(x){ return '$'+(+x).toFixed(2); }
+// every API value is caller-influenced (X-Feature, team names): escape before innerHTML
+function esc(x){ return String(x).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
 async function load(){
   try{
     const [s, trend, feats, teams, waste, sugg, alerts] = await Promise.all([
       api('/api/summary'), api('/api/trend'), api('/api/by/feature'),
       api('/api/by/team'), api('/api/waste'), api('/api/suggestions'), api('/api/alerts')]);
     $('kpis').innerHTML = [
-      ['Total spend', money(s.total_cost_usd)], ['Calls', s.calls],
-      ['Waste', money(s.waste_cost_usd)+' ('+s.waste_pct+'%)'],
+      ['Total spend', money(s.total_cost_usd)], ['Calls', esc(s.calls)],
+      ['Waste', money(s.waste_cost_usd)+' ('+esc(s.waste_pct)+'%)'],
       ['Cache saved', money(s.cache_saved_usd)],
-      ['Overhead p50/p99', s.proxy_overhead_ms_p50+' / '+s.proxy_overhead_ms_p99+' ms'],
-      ['Errors', s.errors]
+      ['Overhead p50/p99', esc(s.proxy_overhead_ms_p50)+' / '+esc(s.proxy_overhead_ms_p99)+' ms'],
+      ['Errors', esc(s.errors)]
     ].map(([l,v])=>`<div class="card kpi"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('');
     $('alerts').innerHTML = alerts.map(a =>
-      `<div class="card">🚨 <b>${a.team}</b> is at <b>${a.pct}%</b> of its $${a.budget_usd} monthly budget (MTD ${money(a.mtd_usd)}) <span class="tag ${a.level}">${a.level}</span></div>`).join('');
+      `<div class="card">🚨 <b>${esc(a.team)}</b> is at <b>${esc(a.pct)}%</b> of its $${esc(a.budget_usd)} monthly budget (MTD ${money(a.mtd_usd)}) <span class="tag ${esc(a.level)}">${esc(a.level)}</span></div>`).join('');
     chart('trend', {type:'line', data:{labels:trend.map(t=>t.day),
       datasets:[{data:trend.map(t=>t.cost_usd), borderColor:'#4f8cff', backgroundColor:'#4f8cff33', fill:true, tension:.3}]},
       options:{plugins:{legend:{display:false}}, scales:{y:{ticks:{callback:v=>'$'+v}}}}});
@@ -93,15 +95,15 @@ async function load(){
       datasets:[{data:teams.map(t=>t.cost_usd), backgroundColor:['#4f8cff','#3ecf8e','#ffb020','#ff5d5d','#a78bfa','#f472b6']}]},
       options:{plugins:{legend:{position:'right'}}}});
     $('waste').innerHTML = '<tr><th>Feature</th><th>Cause</th><th>Calls</th><th>Cost</th></tr>' +
-      (waste.length ? waste.map(w=>`<tr><td>${w.feature}</td><td>${w.flag}</td><td>${w.calls}</td><td>${money(w.cost_usd)}</td></tr>`).join('') : '<tr><td colspan=4 style="color:var(--dim)">no waste detected 🎉</td></tr>');
+      (waste.length ? waste.map(w=>`<tr><td>${esc(w.feature)}</td><td>${esc(w.flag)}</td><td>${esc(w.calls)}</td><td>${money(w.cost_usd)}</td></tr>`).join('') : '<tr><td colspan=4 style="color:var(--dim)">no waste detected 🎉</td></tr>');
     $('suggestions').innerHTML = '<tr><th>Feature</th><th>Current</th><th>Suggested</th><th>Spend</th><th>Projected</th><th>Savings</th><th>Quality</th></tr>' +
       (sugg.length ? sugg.map(x=>{
-        const q = x.quality; const tag = `<span class="tag ${q.verdict}">${q.verdict}</span>`;
-        const detail = q.verdict==='unevaluated' ? '' : ` win ${(q.win_rate*100).toFixed(0)}% · Δ${q.delta} · n=${q.samples}`;
-        return `<tr><td>${x.feature}</td><td>${x.current_model}</td><td>${x.suggested_model}</td><td>${money(x.current_cost_usd)}</td><td>${money(x.projected_cost_usd)}</td><td><b>${money(x.monthly_savings_usd)}</b></td><td>${tag}${detail}</td></tr>`;
+        const q = x.quality; const tag = `<span class="tag ${esc(q.verdict)}">${esc(q.verdict)}</span>`;
+        const detail = q.verdict==='unevaluated' ? '' : ` win ${(q.win_rate*100).toFixed(0)}% · Δ${esc(q.delta)} · n=${esc(q.samples)}`;
+        return `<tr><td>${esc(x.feature)}</td><td>${esc(x.current_model)}</td><td>${esc(x.suggested_model)}</td><td>${money(x.current_cost_usd)}</td><td>${money(x.projected_cost_usd)}</td><td><b>${money(x.monthly_savings_usd)}</b></td><td>${tag}${detail}</td></tr>`;
       }).join('') : '<tr><td colspan=7 style="color:var(--dim)">no substitution candidates yet</td></tr>');
   }catch(e){
-    $('kpis').innerHTML = `<div class="card kpi"><div class="l">error</div><div class="v" style="font-size:14px">${e.message} — paste a valid proxy key above</div></div>`;
+    $('kpis').innerHTML = `<div class="card kpi"><div class="l">error</div><div class="v" style="font-size:14px">${esc(e.message)} — paste a valid proxy key above</div></div>`;
   }
 }
 $('key').value = localStorage.getItem('cfkey')||'';

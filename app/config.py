@@ -23,10 +23,11 @@ ANTHROPIC_BASE_URL = os.getenv("ANTHROPIC_BASE_URL", "https://api.anthropic.com"
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 
-# serve = return cached response for near-dup low-temperature requests
-# detect = only flag the waste, never change behavior
+# detect = only flag the waste, never change behavior (default)
+# serve  = return cached response for near-dup low-temperature requests. Opt-in:
+#          the shingle matcher ignores non-ASCII text, so distinct prompts can collide.
 # off    = disable semantic cache entirely
-CACHE_MODE = os.getenv("CACHE_MODE", "serve")
+CACHE_MODE = os.getenv("CACHE_MODE", "detect")
 CACHE_TTL_S = float(os.getenv("CACHE_TTL_S", "300"))
 CACHE_SIMILARITY = float(os.getenv("CACHE_SIMILARITY", "0.85"))
 CACHE_MAX_TEMPERATURE = float(os.getenv("CACHE_MAX_TEMPERATURE", "0.3"))
