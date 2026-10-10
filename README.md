@@ -8,6 +8,7 @@
 > - Upstream errors on streaming requests come back as HTTP 200 with an empty stream.
 > - The semantic cache ignores non-ASCII text, so keep `CACHE_MODE=detect` (the default).
 > - The model-comparison judge has no answer-order swap and no minimum sample size.
+> - When an exact duplicate is also a semantic-cache hit, it's flagged `duplicate` twice (`app/proxy.py:127`), so the waste report counts that call and its cost twice.
 
 # 💸 Build 2 — LLM Cost Forensics
 
